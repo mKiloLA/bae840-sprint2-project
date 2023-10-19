@@ -1,4 +1,40 @@
 #include "Arduino.h"
+// #include <QMC5883LCompass.h>
+
+// QMC5883LCompass compass;
+
+
+// void setup() {
+//   Serial.begin(9600);
+//   compass.init();
+//   compass.setCalibrationOffsets(77.00, -61.00, 66.00);
+//   compass.setCalibrationScales(0.80, 1.17, 1.12);
+  
+// }
+
+// void loop() {
+//   int x, y, z;
+  
+//   // Read compass values
+//   compass.read();
+
+//   // Return XYZ readings
+//   x = compass.getX();
+//   y = compass.getY();
+//   z = compass.getZ();
+  
+//   Serial.print("X: ");
+//   Serial.print(x);
+//   Serial.print(" Y: ");
+//   Serial.print(y);
+//   Serial.print(" Z: ");
+//   Serial.print(z);
+//   Serial.println();
+  
+//   delay(250);
+// }
+
+
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "SparkFun_VL53L1X.h"
@@ -56,37 +92,48 @@ void loop(void)
   u8g2.firstPage();
   do{
     // Indicator bar for the front facing time of flight
-    if (distanceTOF < 2) {
+    if (distanceTOF < 1000) {
       u8g2.setDrawColor(1);
       u8g2.drawBox(0, 0, 128, 19);
     } else {
       u8g2.setDrawColor(0);
       u8g2.drawBox(0, 0, 128, 19);
+    }
+    u8g2.setDrawColor(1);
+    u8g2.drawBox(21, 80, 86, 19);
+
+    // Indicator bar for the front facing time of flight
+    if (distanceTOF < 1300) {
+      u8g2.setDrawColor(1);
+      u8g2.drawBox(21, 80, 86, 19);
+    } else {
+      u8g2.setDrawColor(0);
+      u8g2.drawBox(21, 80, 86, 19);
     }
 
     // Indicator bar for the right facing ultrasonic sensor
-    if (distanceRight < 2) {
+    if (distanceRight < 100) {
       u8g2.setDrawColor(1);
-      u8g2.drawBox(108, 20, 20, 128);
+      u8g2.drawBox(108, 20, 20, 108);
     } else {
       u8g2.setDrawColor(0);
-      u8g2.drawBox(108, 20, 20, 128);
+      u8g2.drawBox(108, 20, 20, 108);
     }
 
     // Indicator bar for the left facing ultrasonic sensor
-    if (distanceLeft < 2) {
+    if (distanceLeft < 100) {
       u8g2.setDrawColor(1);
-      u8g2.drawBox(0, 20, 20, 128);
+      u8g2.drawBox(0, 20, 20, 108);
     } else {
       u8g2.setDrawColor(0);
-      u8g2.drawBox(0, 20, 20, 128);
+      u8g2.drawBox(0, 20, 20, 108);
     }
 
     // Write the distances to the OLED display
     u8g2.setFont(u8g2_font_amstrad_cpc_extended_8f);
     u8g2.setDrawColor(2);
-    u8g2.drawStr(64, 32, String(distanceTOF).c_str());
-    u8g2.drawStr(80, 64, String(distanceRight).c_str());
+    u8g2.drawStr(48, 32, String(distanceTOF).c_str());
+    u8g2.drawStr(72, 64, String(distanceRight).c_str());
     u8g2.drawStr(32, 64, String(distanceLeft).c_str());
   }
   while(u8g2.nextPage());
@@ -98,13 +145,13 @@ void readSensors(void) {
   while (!distanceSensor.checkForDataReady()) {
     delay(1);
   }
-  distanceTOF = distanceSensor.getDistance() / 300; //Get the result of the measurement from the sensor
+  distanceTOF = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
   distanceSensor.clearInterrupt();
   distanceSensor.stopRanging();
 
   // Ping ultrasonic sensors
   sumRight = sumRight - distanceRightReadings[INDEX];
-  valueRight = sonar[0].ping_cm() / 30;
+  valueRight = sonar[0].ping_cm();
   distanceRightReadings[INDEX] = valueRight;
   sumRight = sumRight + valueRight;
   distanceRight = sumRight / SAMPLE_SIZE;
@@ -112,7 +159,7 @@ void readSensors(void) {
   delay(29);
 
   sumLeft = sumLeft - distanceLeftReadings[INDEX];
-  valueLeft = sonar[1].ping_cm() / 30;
+  valueLeft = sonar[1].ping_cm();
   distanceLeftReadings[INDEX] = valueLeft;
   sumLeft = sumLeft + valueLeft;
   distanceLeft = sumLeft / SAMPLE_SIZE;
